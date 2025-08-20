@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skid RC - 4x4 Off-Road Masters</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom font setup */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #111827; /* bg-gray-900 */
+        }
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Keyframe animations for elements */
+        @keyframes slideInUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes slideInLeft {
+            from { transform: translateX(-100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Initial state for scroll-triggered animations */
+        .reveal {
+            opacity: 0;
+            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* Active state for scroll-triggered animations */
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .reveal-up { transform: translateY(50px); }
+        .reveal-left { transform: translateX(-50px); }
+        .reveal-right { transform: translateX(50px); }
+        .reveal-zoom { transform: scale(0.9); }
+
+        /* Hero car animation container */
+        .hero-car-container {
+            perspective: 1000px; /* Adds depth to the 3D rotation */
+        }
+        
+        /* The car itself will have a smooth transition for the rotation */
+        #rotating-car {
+            transition: transform 0.1s linear;
+        }
+
+        /* Hero text animation */
+        .hero-text {
+            animation: slideInLeft 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s forwards;
+            opacity: 0;
+        }
+        
+        /* Neon glow effect for buttons and highlights */
+        .neon-glow {
+            box-shadow: 0 0 5px #0ea5e9, 0 0 15px #0ea5e9, 0 0 25px #0ea5e9;
+        }
+        .neon-glow-text {
+            text-shadow: 0 0 2px #0ea5e9, 0 0 5px #0ea5e9;
+        }
+        
+        /* Custom background with gradient */
+        .hero-bg {
+            background: radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.15) 0%, rgba(17, 24, 39, 0) 60%);
+        }
+
+        /* Styling for the product cards */
+        .product-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(55, 65, 81, 0.5);
+        }
+        .product-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.4), 0 0 40px rgba(14, 165, 233, 0.2);
+        }
+        .product-card img {
+            transition: transform 0.3s ease;
+        }
+        .product-card:hover img {
+            transform: rotate(-5deg) scale(1.1);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            transition: opacity 0.3s ease;
+        }
+        .modal-container {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .modal-hidden {
+            pointer-events: none;
+        }
+        .modal-hidden .modal-overlay {
+            opacity: 0;
+        }
+        .modal-hidden .modal-container {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        
+        /* FAQ Accordion */
+        .faq-question {
+            cursor: pointer;
+        }
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white overflow-x-hidden">
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-gray-900/80 backdrop-blur-sm">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="font-orbitron text-2xl font-bold tracking-widest uppercase neon-glow-text text-sky-400">Skid<span class="text-white">RC</span></a>
+            <nav class="hidden md:flex space-x-8 items-center">
+                <a href="#products" class="hover:text-sky-400 transition-colors duration-300">Models</a>
+                <a href="#compare" class="hover:text-sky-400 transition-colors duration-300">Compare</a>
+                <a href="#features" class="hover:text-sky-400 transition-colors duration-300">Features</a>
+                <a href="#about" class="hover:text-sky-400 transition-colors duration-300">About</a>
+                <a href="#testimonials" class="hover:text-sky-400 transition-colors duration-300">Reviews</a>
+                <a href="#faq" class="hover:text-sky-400 transition-colors duration-300">FAQ</a>
+                <button id="cart-button" class="relative text-sky-400 hover:text-sky-300 transition-colors">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                </button>
+            </nav>
+            <button class="md:hidden text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero-section" class="min-h-screen flex items-center hero-bg pt-20">
+            <div class="container mx-auto px-6 grid md:grid-cols-2 gap-8 items-center">
+                <div class="text-center md:text-left hero-text">
+                    <h1 class="font-orbitron text-4xl md:text-6xl lg:text-7xl font-black uppercase tracking-wider">
+                        Conquer <span class="text-sky-400 neon-glow-text">Any Terrain</span>
+                    </h1>
+                    <p class="mt-4 text-lg text-gray-300 max-w-lg mx-auto md:mx-0">
+                        Experience the raw power of 4x4 RC racing. Our precision-engineered 1:64 and 1:28 scale models are built for extreme performance and endless fun.
+                    </p>
+                    <div class="mt-8 flex justify-center md:justify-start space-x-4">
+                        <a href="#products" class="bg-sky-500 hover:bg-sky-400 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 text-lg neon-glow">
+                            Explore Models
+                        </a>
+                        <a href="#" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 text-lg">
+                            Watch Video
+                        </a>
+                    </div>
+                </div>
+                <div class="hero-car-container">
+                    <img id="rotating-car" src="https://placehold.co/800x600/111827/transparent?text=RC+Car+Image" 
+                         onerror="this.onerror=null;this.src='https://placehold.co/800x600/111827/FFFFFF?text=RC+Car+Image';"
+                         alt="Red 4x4 RC Car" class="w-full h-auto drop-shadow-[0_25px_25px_rgba(0,0,0,0.5)]">
+                </div>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section id="products" class="py-20 bg-gray-900">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12 reveal reveal-up">
+                    <h2 class="font-orbitron text-4xl font-bold uppercase">Choose Your Challenger</h2>
+                    <p class="text-gray-400 mt-2">Two scales. Same untamed spirit.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-10">
+                    <!-- Product Card 1:64 -->
+                    <div class="bg-gray-800 rounded-2xl overflow-hidden product-card reveal reveal-left flex flex-col">
+                        <div class="p-8">
+                            <span class="text-sky-400 font-bold">1:64 SCALE</span>
+                            <h3 class="font-orbitron text-3xl font-bold mt-2">The Pocket Rocket</h3>
+                            <p class="text-gray-300 mt-3">Don't let the size fool you. This agile beast is perfect for indoor tracks and precision driving, packing a serious punch.</p>
+                        </div>
+                        <img src="https://placehold.co/600x400/1f2937/transparent?text=1:64+Scale+RC" 
+                             onerror="this.onerror=null;this.src='https://placehold.co/600x400/1f2937/FFFFFF?text=1:64+Scale+RC';"
+                             alt="1:64 Scale RC Car" class="w-full h-auto">
+                        <div class="p-8 mt-auto bg-gray-800/50 flex justify-between items-center">
+                            <span class="text-3xl font-bold">₹6,700</span>
+                            <button data-modal-target="modal-1-64" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Learn More</button>
+                        </div>
+                    </div>
+                    <!-- Product Card 1:28 -->
+                    <div class="bg-gray-800 rounded-2xl overflow-hidden product-card reveal reveal-right flex flex-col">
+                        <div class="p-8">
+                            <span class="text-green-400 font-bold">1:28 SCALE</span>
+                            <h3 class="font-orbitron text-3xl font-bold mt-2">The Trail Blazer</h3>
+                            <p class="text-gray-300 mt-3">Bigger, bolder, and ready for the wild. With enhanced suspension and power, it's built to dominate any off-road challenge.</p>
+                        </div>
+                        <img src="https://placehold.co/600x400/1f2937/transparent?text=1:28+Scale+RC" 
+                             onerror="this.onerror=null;this.src='https://placehold.co/600x400/1f2937/FFFFFF?text=1:28+Scale+RC';"
+                             alt="1:28 Scale RC Car" class="w-full h-auto">
+                        <div class="p-8 mt-auto bg-gray-800/50 flex justify-between items-center">
+                            <span class="text-3xl font-bold">₹10,900</span>
+                            <button data-modal-target="modal-1-28" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg transition-all">Learn More</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Section -->
+        <section id="compare" class="py-20 bg-gray-900/50">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12 reveal reveal-up">
+                    <h2 class="font-orbitron text-4xl font-bold uppercase">Head-to-Head</h2>
+                    <p class="text-gray-400 mt-2">Find the perfect scale for your adventure.</p>
+                </div>
+                <div class="max-w-4xl mx-auto bg-gray-800 rounded-2xl overflow-hidden reveal reveal-zoom">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-700/50">
+                            <tr>
+                                <th class="p-4 font-orbitron text-lg">Feature</th>
+                                <th class="p-4 font-orbitron text-lg text-sky-400">1:64 Pocket Rocket</th>
+                                <th class="p-4 font-orbitron text-lg text-green-400">1:28 Trail Blazer</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            <tr class="hover:bg-gray-700/30"><td class="p-4 font-bold">Top Speed</td><td class="p-4">20 km/h</td><td class="p-4">35 km/h</td></tr>
+                            <tr class="hover:bg-gray-700/30"><td class="p-4 font-bold">Battery Life</td><td class="p-4">15 mins</td><td class="p-4">25 mins</td></tr>
+                            <tr class="hover:bg-gray-700/30"><td class="p-4 font-bold">Best For</td><td class="p-4">Indoor / Smooth Surfaces</td><td class="p-4">Outdoor / All-Terrain</td></tr>
+                            <tr class="hover:bg-gray-700/30"><td class="p-4 font-bold">Suspension</td><td class="p-4">Basic Independent</td><td class="p-4">Oil-Filled Shocks</td></tr>
+                            <tr class="hover:bg-gray-700/30"><td class="p-4 font-bold">Dimensions</td><td class="p-4">7cm x 4cm</td><td class="p-4">15cm x 8cm</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="py-20 bg-gray-900">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12 reveal reveal-up">
+                    <h2 class="font-orbitron text-4xl font-bold uppercase">Engineered for Extremes</h2>
+                    <p class="text-gray-400 mt-2">The tech that puts you ahead of the pack.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8 text-center">
+                    <div class="bg-gray-800 p-8 rounded-2xl reveal reveal-up" style="transition-delay: 0.1s;"><div class="text-sky-400 mb-4 inline-block"><svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2 1M4 7l2-1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" /></svg></div><h3 class="font-orbitron text-2xl font-bold">True 4x4 Drivetrain</h3><p class="text-gray-400 mt-2">Maximum grip and torque distribution for climbing steep inclines and powering through tough terrain.</p></div>
+                    <div class="bg-gray-800 p-8 rounded-2xl reveal reveal-up" style="transition-delay: 0.3s;"><div class="text-sky-400 mb-4 inline-block"><svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg></div><h3 class="font-orbitron text-2xl font-bold">High-RPM Brushless Motor</h3><p class="text-gray-400 mt-2">Insane acceleration and top speeds that will leave the competition in the dust. Ready to race out of the box.</p></div>
+                    <div class="bg-gray-800 p-8 rounded-2xl reveal reveal-up" style="transition-delay: 0.5s;"><div class="text-sky-400 mb-4 inline-block"><svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg></div><h3 class="font-orbitron text-2xl font-bold">Impact-Resistant Chassis</h3><p class="text-gray-400 mt-2">Engineered with a durable polymer composite to withstand flips, jumps, and high-speed crashes.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="about" class="py-20 bg-gray-900/50">
+            <div class="container mx-auto px-6 text-center">
+                <div class="max-w-3xl mx-auto">
+                    <div class="reveal reveal-up"><h2 class="font-orbitron text-4xl font-bold uppercase">Fueled by Passion</h2><p class="text-gray-400 mt-2">The Story of Skid RC</p></div>
+                    <div class="mt-8 text-lg text-gray-300 space-y-4 reveal reveal-up" style="transition-delay: 0.2s;">
+                        <p>Skid RC wasn't born in a boardroom; it was born in a garage, covered in grease and fueled by a lifelong obsession with all things remote-controlled. We're a small team of engineers and hobbyists who believe that RC cars should be more than just toys—they should be an adrenaline rush in a small package.</p>
+                        <p>We spent countless hours designing, testing, and breaking things just to build them back stronger. Our mission is simple: to create the most durable, high-performance, and ridiculously fun micro RC cars on the market. Every model we sell is one we'd personally love to race.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Testimonials Section -->
+        <section id="testimonials" class="py-20 bg-gray-900">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12 reveal reveal-up"><h2 class="font-orbitron text-4xl font-bold uppercase">What Our Racers Say</h2><p class="text-gray-400 mt-2">Real reviews from the Skid RC community.</p></div>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-gray-800 p-8 rounded-2xl reveal reveal-up" style="transition-delay: 0.1s;"><p class="text-gray-300 italic">"The Pocket Rocket is an absolute blast! The control is so precise. I've been setting up tracks in my living room and my cat has never been more terrified. 10/10."</p><div class="mt-4 font-bold text-sky-400">- Arjun K.</div></div>
+                    <div class="bg-gray-800 p-8 rounded-2xl reveal reveal-up" style="transition-delay: 0.3s;"><p class="text-gray-300 italic">"I bought the Trail Blazer for my son, but now I think it's mine. The durability is insane. We've flipped it, crashed it, and it just keeps going. Amazing build quality."</p><div class="mt-4 font-bold text-green-400">- Priya S.</div></div>
+                    <div class="bg-gray-800 p-8 rounded-2xl reveal reveal-up" style="transition-delay: 0.5s;"><p class="text-gray-300 italic">"Seriously impressive for its size. The 4x4 system on the Trail Blazer actually works, it crawls over everything in my garden. Best micro RC I've ever owned."</p><div class="mt-4 font-bold text-sky-400">- Rohan M.</div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section id="faq" class="py-20 bg-gray-900/50">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12 reveal reveal-up"><h2 class="font-orbitron text-4xl font-bold uppercase">Frequently Asked Questions</h2></div>
+                <div class="max-w-3xl mx-auto space-y-4 reveal reveal-zoom">
+                    <div class="bg-gray-800 rounded-lg faq-item"><div class="faq-question p-6 flex justify-between items-center"><h3 class="font-orbitron text-xl">What is your shipping policy?</h3><svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div><div class="faq-answer px-6 pb-6 text-gray-400"><p>We ship all over India! Standard shipping takes 5-7 business days. All orders are dispatched from our warehouse in Raipur within 48 hours.</p></div></div>
+                    <div class="bg-gray-800 rounded-lg faq-item"><div class="faq-question p-6 flex justify-between items-center"><h3 class="font-orbitron text-xl">What if I have an issue with my car?</h3><svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div><div class="faq-answer px-6 pb-6 text-gray-400"><p>We stand by our products. We offer a 30-day replacement warranty on any manufacturing defects. Contact our support team and we'll be happy to help you out.</p></div></div>
+                    <div class="bg-gray-800 rounded-lg faq-item"><div class="faq-question p-6 flex justify-between items-center"><h3 class="font-orbitron text-xl">Are spare parts available?</h3><svg class="w-6 h-6 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div><div class="faq-answer px-6 pb-6 text-gray-400"><p>Yes! We are building out our inventory of spare parts, including batteries, tires, and body shells. They will be available for purchase on our site soon.</p></div></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 border-t border-gray-700">
+        <div class="container mx-auto px-6 py-8 text-center text-gray-400">
+            <a href="#" class="font-orbitron text-2xl font-bold tracking-widest uppercase text-sky-400">Skid<span class="text-white">RC</span></a>
+            <div class="flex justify-center space-x-6 mt-4"><a href="#" class="hover:text-white">Facebook</a><a href="#" class="hover:text-white">Instagram</a><a href="#" class="hover:text-white">YouTube</a></div>
+            <p class="mt-4">&copy; 2024 Skid RC. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Product Modals -->
+    <div id="modal-1-64" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center"><div class="modal-overlay absolute inset-0 bg-black/70"></div><div class="modal-container bg-gray-800 w-11/12 md:max-w-3xl mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto"><div class="p-6 md:p-8"><div class="flex justify-between items-start"><div><span class="text-sky-400 font-bold">1:64 SCALE</span><h3 class="font-orbitron text-3xl font-bold mt-1">The Pocket Rocket</h3></div><button class="modal-close p-2 -mt-2 -mr-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div class="mt-4 grid md:grid-cols-2 gap-6"><img src="https://placehold.co/600x400/1f2937/FFFFFF?text=Pocket+Rocket" class="rounded-lg w-full"><div><p class="text-gray-300">The ultimate micro-sized beast for precision and agility. Perfect for creating your own indoor race circuits or mastering technical drifts on smooth surfaces. It's proof that big performance can come in small packages.</p><h4 class="font-orbitron text-xl font-bold mt-4 mb-2">Full Specs:</h4><ul class="list-disc list-inside text-gray-400 space-y-1"><li>Proportional Steering & Throttle</li><li>2.4GHz Transmitter</li><li>USB-C Charging</li><li>Replaceable Body Shell</li></ul><div class="mt-6 flex justify-between items-center"><span class="text-4xl font-bold">₹6,700</span><button class="add-to-cart-btn bg-sky-500 hover:bg-sky-400 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 neon-glow" data-product-id="p1">Add to Cart</button></div></div></div></div></div></div>
+    <div id="modal-1-28" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center"><div class="modal-overlay absolute inset-0 bg-black/70"></div><div class="modal-container bg-gray-800 w-11/12 md:max-w-3xl mx-auto rounded-2xl shadow-lg z-50 overflow-y-auto"><div class="p-6 md:p-8"><div class="flex justify-between items-start"><div><span class="text-green-400 font-bold">1:28 SCALE</span><h3 class="font-orbitron text-3xl font-bold mt-1">The Trail Blazer</h3></div><button class="modal-close p-2 -mt-2 -mr-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div class="mt-4 grid md:grid-cols-2 gap-6"><img src="https://placehold.co/600x400/1f2937/FFFFFF?text=Trail+Blazer" class="rounded-lg w-full"><div><p class="text-gray-300">Unleash true off-road power. The Trail Blazer is built to tackle dirt, gravel, and grass with ease. Its larger size, robust suspension, and high-torque motor make it the king of outdoor micro-crawling and bashing.</p><h4 class="font-orbitron text-xl font-bold mt-4 mb-2">Full Specs:</h4><ul class="list-disc list-inside text-gray-400 space-y-1"><li>Hobby-Grade Servo</li><li>All-Terrain Rubber Tires</li><li>Front & Rear LED Lights</li><li>Upgradable Components</li></ul><div class="mt-6 flex justify-between items-center"><span class="text-4xl font-bold">₹10,900</span><button class="add-to-cart-btn bg-green-500 hover:bg-green-400 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105" data-product-id="p2">Add to Cart</button></div></div></div></div></div></div>
+    
+    <!-- Shopping Cart Modal -->
+    <div id="cart-modal" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center"><div class="modal-overlay absolute inset-0 bg-black/70"></div><div class="modal-container bg-gray-800 w-11/12 md:max-w-2xl mx-auto rounded-2xl shadow-lg z-50 flex flex-col" style="max-height: 90vh;"><div class="p-6 border-b border-gray-700 flex justify-between items-center"><h3 class="font-orbitron text-2xl font-bold">Your Cart</h3><button class="modal-close p-2 -m-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div id="cart-items-container" class="p-6 space-y-4 overflow-y-auto flex-grow"></div><div class="p-6 border-t border-gray-700 bg-gray-800/50"><div class="flex justify-between items-center text-lg"><span class="font-bold">Subtotal:</span><span id="cart-subtotal" class="font-bold">₹0.00</span></div><button id="checkout-btn" class="w-full mt-4 bg-sky-500 hover:bg-sky-400 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 neon-glow text-lg">Proceed to Checkout</button></div></div></div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center"><div class="modal-overlay absolute inset-0 bg-black/70"></div><div class="modal-container bg-gray-800 w-11/12 md:max-w-4xl mx-auto rounded-2xl shadow-lg z-50 flex flex-col" style="max-height: 90vh;"><div class="p-6 border-b border-gray-700 flex justify-between items-center"><h3 class="font-orbitron text-2xl font-bold">Checkout</h3><button class="modal-close p-2 -m-2"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div><div class="p-6 overflow-y-auto flex-grow grid md:grid-cols-2 gap-8"><div id="checkout-form-container">
+        <div id="shipping-step">
+            <h4 class="font-orbitron text-xl font-bold mb-4">1. Shipping Details</h4>
+            <div class="space-y-4">
+                <input type="text" id="fullName" placeholder="Full Name" class="w-full bg-gray-700 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500">
+                <input type="email" id="email" placeholder="Email Address" class="w-full bg-gray-700 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500">
+                <input type="text" id="address" placeholder="Shipping Address" class="w-full bg-gray-700 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500">
+                <div class="grid grid-cols-2 gap-4">
+                    <input type="text" id="city" placeholder="City" class="w-full bg-gray-700 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500">
+                    <input type="text" id="pincode" placeholder="Pincode" class="w-full bg-gray-700 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-sky-500">
+                </div>
+                <button id="to-payment-btn" class="w-full mt-4 bg-sky-500 hover:bg-sky-400 text-white font-bold py-3 px-6 rounded-lg">Continue to Payment</button>
+            </div>
+        </div>
+        <div id="payment-step" class="hidden">
+            <h4 class="font-orbitron text-xl font-bold mb-4">2. Payment Method</h4>
+            <div class="space-y-4">
+                <!-- Payment options are placeholders for integration -->
+                <div class="bg-gray-700 p-4 rounded-md text-center text-gray-400">
+                    You will be redirected to a secure payment gateway.
+                </div>
+                <button id="place-order-btn" class="w-full mt-4 bg-green-500 hover:bg-green-400 text-white font-bold py-3 px-6 rounded-lg">Proceed to Secure Payment</button>
+                <button id="back-to-shipping-btn" class="w-full mt-2 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded-lg">Back to Shipping</button>
+            </div>
+        </div>
+        <div id="confirmation-step" class="hidden text-center py-8">
+            <h4 class="font-orbitron text-2xl font-bold text-green-400">Thank You!</h4>
+            <p class="text-gray-300 mt-2">Your order has been placed successfully.</p>
+            <p class="text-gray-400 mt-1">A confirmation email is on its way.</p>
+        </div>
+    </div><div id="order-summary" class="bg-gray-900/50 p-6 rounded-lg"><h4 class="font-orbitron text-xl font-bold mb-4">Order Summary</h4><div id="summary-items" class="space-y-2"></div><div class="border-t border-gray-700 mt-4 pt-4 flex justify-between font-bold text-lg"><p>Total</p><p id="summary-total">₹0.00</p></div></div></div></div></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const products = [{ id: 'p1', name: 'The Pocket Rocket', price: 6700.00, img: 'https://placehold.co/100x80/1f2937/FFFFFF?text=1:64' },{ id: 'p2', name: 'The Trail Blazer', price: 10900.00, img: 'https://placehold.co/100x80/1f2937/FFFFFF?text=1:28' }];
+            let cart = [];
+
+            const cartButton = document.getElementById('cart-button');
+            const cartCount = document.getElementById('cart-count');
+            const cartModal = document.getElementById('cart-modal');
+            const cartItemsContainer = document.getElementById('cart-items-container');
+            const cartSubtotal = document.getElementById('cart-subtotal');
+            const checkoutBtn = document.getElementById('checkout-btn');
+            const checkoutModal = document.getElementById('checkout-modal');
+
+            function addToCart(productId) {
+                const existingItem = cart.find(item => item.id === productId);
+                if (existingItem) { existingItem.quantity++; } else { cart.push({ id: productId, quantity: 1 }); }
+                updateCart();
+            }
+
+            function changeQuantity(productId, change) {
+                const item = cart.find(item => item.id === productId);
+                if (item) {
+                    item.quantity += change;
+                    if (item.quantity <= 0) { cart = cart.filter(cartItem => cartItem.id !== productId); }
+                }
+                updateCart();
+            }
+
+            function updateCart() {
+                cartItemsContainer.innerHTML = '';
+                if (cart.length === 0) {
+                    cartItemsContainer.innerHTML = `<p class="text-gray-400 text-center py-8">Your cart is empty.</p>`;
+                    cartCount.classList.add('hidden');
+                    cartSubtotal.textContent = '₹0.00';
+                    checkoutBtn.disabled = true;
+                    checkoutBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    return;
+                }
+                checkoutBtn.disabled = false;
+                checkoutBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                let subtotal = 0;
+                let totalItems = 0;
+                const inrFormatter = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' });
+
+                cart.forEach(item => {
+                    const product = products.find(p => p.id === item.id);
+                    if (!product) return;
+                    subtotal += product.price * item.quantity;
+                    totalItems += item.quantity;
+                    const cartItemEl = document.createElement('div');
+                    cartItemEl.className = 'flex items-center justify-between gap-4';
+                    cartItemEl.innerHTML = `<img src="${product.img}" alt="${product.name}" class="w-24 h-16 object-cover rounded-lg"><div class="flex-grow"><h4 class="font-bold">${product.name}</h4><p class="text-sky-400">${inrFormatter.format(product.price)}</p></div><div class="flex items-center gap-2"><button class="quantity-btn bg-gray-700 w-7 h-7 rounded-md hover:bg-gray-600" data-product-id="${product.id}" data-change="-1">-</button><span class="w-8 text-center">${item.quantity}</span><button class="quantity-btn bg-gray-700 w-7 h-7 rounded-md hover:bg-gray-600" data-product-id="${product.id}" data-change="1">+</button></div>`;
+                    cartItemsContainer.appendChild(cartItemEl);
+                });
+                cartSubtotal.textContent = inrFormatter.format(subtotal);
+                cartCount.textContent = totalItems;
+                cartCount.classList.remove('hidden');
+            }
+
+            const heroSection = document.getElementById('hero-section');
+            const rotatingCar = document.getElementById('rotating-car');
+            window.addEventListener('scroll', () => {
+                const scrollPosition = window.scrollY;
+                if (!heroSection) return;
+                const heroTop = heroSection.offsetTop;
+                const heroHeight = heroSection.offsetHeight;
+                if (scrollPosition >= heroTop && scrollPosition <= heroTop + heroHeight) {
+                    const scrollProgress = (scrollPosition - heroTop) / (heroHeight - window.innerHeight);
+                    const rotation = Math.min(360, scrollProgress * 360);
+                    if (rotatingCar) rotatingCar.style.transform = `rotateY(${rotation}deg)`;
+                }
+            });
+
+            const revealElements = document.querySelectorAll('.reveal');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
+            }, { threshold: 0.1 });
+            revealElements.forEach(el => observer.observe(el));
+
+            function openModal(modal) {
+                if (modal == null) return;
+                modal.classList.remove('modal-hidden');
+                const closeModalButtons = modal.querySelectorAll('.modal-close');
+                const overlay = modal.querySelector('.modal-overlay');
+                closeModalButtons.forEach(button => button.addEventListener('click', () => closeModal(modal)));
+                overlay.addEventListener('click', () => closeModal(modal));
+            }
+
+            function closeModal(modal) {
+                if (modal == null) return;
+                modal.classList.add('modal-hidden');
+            }
+
+            document.querySelectorAll('[data-modal-target]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const modal = document.getElementById(button.dataset.modalTarget);
+                    openModal(modal);
+                });
+            });
+            
+            document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const productId = e.target.dataset.productId;
+                    addToCart(productId);
+                    const parentModal = e.target.closest('.modal-hidden.fixed') || e.target.closest('.fixed');
+                    if(parentModal) closeModal(parentModal);
+                    openModal(cartModal);
+                });
+            });
+
+            cartButton.addEventListener('click', () => openModal(cartModal));
+
+            cartItemsContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('quantity-btn')) {
+                    const productId = e.target.dataset.productId;
+                    const change = parseInt(e.target.dataset.change, 10);
+                    changeQuantity(productId, change);
+                }
+            });
+
+            // FAQ Accordion
+            document.querySelectorAll('.faq-question').forEach(item => {
+                item.addEventListener('click', event => {
+                    const faqItem = item.parentElement;
+                    const answer = faqItem.querySelector('.faq-answer');
+                    const icon = item.querySelector('svg');
+                    
+                    if (faqItem.classList.contains('open')) {
+                        faqItem.classList.remove('open');
+                        answer.style.maxHeight = null;
+                        icon.style.transform = 'rotate(0deg)';
+                    } else {
+                        faqItem.classList.add('open');
+                        answer.style.maxHeight = answer.scrollHeight + "px";
+                        icon.style.transform = 'rotate(180deg)';
+                    }
+                })
+            });
+
+            // Checkout Logic
+            const shippingStep = document.getElementById('shipping-step');
+            const paymentStep = document.getElementById('payment-step');
+            const confirmationStep = document.getElementById('confirmation-step');
+            const toPaymentBtn = document.getElementById('to-payment-btn');
+            const backToShippingBtn = document.getElementById('back-to-shipping-btn');
+            const placeOrderBtn = document.getElementById('place-order-btn');
+            const summaryItems = document.getElementById('summary-items');
+            const summaryTotal = document.getElementById('summary-total');
+
+            checkoutBtn.addEventListener('click', () => {
+                closeModal(cartModal);
+                updateOrderSummary();
+                shippingStep.classList.remove('hidden');
+                paymentStep.classList.add('hidden');
+                confirmationStep.classList.add('hidden');
+                openModal(checkoutModal);
+            });
+
+            toPaymentBtn.addEventListener('click', () => {
+                shippingStep.classList.add('hidden');
+                paymentStep.classList.remove('hidden');
+            });
+
+            backToShippingBtn.addEventListener('click', () => {
+                paymentStep.classList.add('hidden');
+                shippingStep.classList.remove('hidden');
+            });
+
+            // Replace the old placeOrderBtn listener with this one
+            placeOrderBtn.addEventListener('click', async () => {
+                // 1. Gather Shipping Details
+                const shippingDetails = {
+                    name: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    address: document.getElementById('address').value,
+                    city: document.getElementById('city').value,
+                    pincode: document.getElementById('pincode').value,
+                };
+
+                // 2. Create the complete order payload
+                const orderPayload = {
+                    customer: shippingDetails,
+                    cart: cart // The global cart variable
+                };
+
+                // 3. Send the data to the backend
+                try {
+                    placeOrderBtn.textContent = 'Processing...';
+                    placeOrderBtn.disabled = true;
+
+                    const response = await fetch('http://localhost:3000/api/create-order', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(orderPayload),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const result = await response.json();
+                    console.log('Response from server:', result);
+
+                    // 4. Show confirmation and clear the cart
+                    paymentStep.classList.add('hidden');
+                    confirmationStep.classList.remove('hidden');
+                    cart = [];
+                    updateCart();
+
+                } catch (error) {
+                    console.error('There was a problem with the fetch operation:', error);
+                    alert('Could not place order. Please try again.');
+                } finally {
+                    placeOrderBtn.textContent = 'Proceed to Secure Payment';
+                    placeOrderBtn.disabled = false;
+                }
+            });
+
+            function updateOrderSummary() {
+                summaryItems.innerHTML = '';
+                let total = 0;
+                const inrFormatter = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' });
+                cart.forEach(item => {
+                    const product = products.find(p => p.id === item.id);
+                    summaryItems.innerHTML += `<div class="flex justify-between text-sm"><p>${product.name} x ${item.quantity}</p><p>${inrFormatter.format(product.price * item.quantity)}</p></div>`;
+                    total += product.price * item.quantity;
+                });
+                summaryTotal.textContent = inrFormatter.format(total);
+            }
+            
+            updateCart(); // Initial cart render
+        });
+    </script>
+
+</body>
+</html>
