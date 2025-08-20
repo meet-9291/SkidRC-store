@@ -542,7 +542,7 @@
                     placeOrderBtn.textContent = 'Processing...';
                     placeOrderBtn.disabled = true;
 
-                    const response = await fetch('http://localhost:3000/api/create-order', {
+                    const response = await fetch('https://skidrc-store.onrender.com/', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
