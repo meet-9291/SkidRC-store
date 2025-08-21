@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - SkidRC Products</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto p-6 max-w-3xl">
+        <h1 class="font-orbitron text-3xl font-bold">Admin - Products</h1>
+        <div class="bg-gray-800 p-6 rounded-xl mt-6 space-y-4">
+            <div class="grid md:grid-cols-2 gap-4">
+                <input id="name" class="bg-gray-700 p-3 rounded" placeholder="Name">
+                <input id="price" type="number" step="0.01" class="bg-gray-700 p-3 rounded" placeholder="Price (INR)">
+                <input id="tag" class="bg-gray-700 p-3 rounded" placeholder="Tag (e.g., 1:64 SCALE)">
+                <input id="img" class="bg-gray-700 p-3 rounded" placeholder="Image URL">
+            </div>
+            <textarea id="description" class="bg-gray-700 p-3 rounded w-full" rows="4" placeholder="Description"></textarea>
+            <div class="flex gap-3 items-center">
+                <input id="adminSecret" class="bg-gray-700 p-3 rounded flex-grow" placeholder="Admin Secret (not stored)">
+                <button id="addBtn" class="bg-sky-600 hover:bg-sky-500 px-6 py-3 rounded font-bold">Add Product</button>
+                <button id="clearBtn" class="bg-red-600 hover:bg-red-500 px-6 py-3 rounded font-bold">Delete All</button>
+            </div>
+        </div>
+
+        <div class="bg-gray-800 p-6 rounded-xl mt-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-bold">Existing Products</h2>
+                <button id="refreshBtn" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded">Refresh</button>
+            </div>
+            <div id="list" class="mt-4 space-y-2"></div>
+        </div>
+    </div>
+
+    <script>
+    async function fetchProducts() {
+        const res = await fetch('/api/products');
+        const items = await res.json();
+        const list = document.getElementById('list');
+        list.innerHTML = '';
+        if (!items.length) {
+            list.innerHTML = '<div class="text-gray-400">No products.</div>';
+            return;
+        }
+        items.forEach(p => {
+            const row = document.createElement('div');
+            row.className = 'flex gap-3 items-center bg-gray-700 p-3 rounded';
+            row.innerHTML = `<img src="${p.img || ''}" class="w-16 h-10 object-cover rounded"><div class="flex-grow"><div class="font-bold">${p.name}</div><div class="text-gray-300">₹${p.price} • ${p.tag || ''}</div></div><button data-id="${p.id}" class="delOne bg-red-600 hover:bg-red-500 px-3 py-2 rounded">Delete</button>`;
+            list.appendChild(row);
+        });
+    }
+
+    async function addProduct() {
+        const body = {
+            name: document.getElementById('name').value,
+            price: Number(document.getElementById('price').value),
+            tag: document.getElementById('tag').value,
+            img: document.getElementById('img').value,
+            description: document.getElementById('description').value
+        };
+        const secret = document.getElementById('adminSecret').value;
+        const res = await fetch('/api/admin/products', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret }, body: JSON.stringify(body)
+        });
+        if (!res.ok) { alert('Failed to add'); return; }
+        await fetchProducts();
+    }
+
+    async function clearAll() {
+        const secret = document.getElementById('adminSecret').value;
+        if (!confirm('Delete all products?')) return;
+        const res = await fetch('/api/admin/products', { method: 'DELETE', headers: { 'x-admin-secret': secret } });
+        if (!res.ok) { alert('Failed to delete'); return; }
+        await fetchProducts();
+    }
+
+    async function deleteOne(id) {
+        const secret = document.getElementById('adminSecret').value;
+        const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE', headers: { 'x-admin-secret': secret } });
+        if (!res.ok) { alert('Failed to delete'); return; }
+        await fetchProducts();
+    }
+
+    document.getElementById('addBtn').addEventListener('click', addProduct);
+    document.getElementById('clearBtn').addEventListener('click', clearAll);
+    document.getElementById('refreshBtn').addEventListener('click', fetchProducts);
+    document.getElementById('list').addEventListener('click', (e) => {
+        if (e.target.classList.contains('delOne')) deleteOne(e.target.dataset.id);
+    });
+
+    fetchProducts();
+    </script>
+</body>
+</html>
+
