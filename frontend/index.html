@@ -419,7 +419,11 @@
                 const heroTop = heroSection.offsetTop;
                 const heroHeight = heroSection.offsetHeight;
                 if (scrollPosition >= heroTop && scrollPosition <= heroTop + heroHeight) {
-                    const scrollProgress = (scrollPosition - heroTop) / (heroHeight - window.innerHeight);
+                    // Product data
+                    const products = [
+                        { id: 'p1', name: 'The Pocket Rocket', price: 6700.00, img: 'images/Doge black(Thumbnail).jpg' },
+                        { id: 'p2', name: 'The Trail Blazer', price: 10900.00, img: 'images/Doge black(Thumbnail).jpg' }
+                    ];
                     const rotation = Math.min(360, scrollProgress * 360);
                     if (rotatingCar) rotatingCar.style.transform = `rotateY(${rotation}deg)`;
                 }
