@@ -1,0 +1,18 @@
+[build]
+  publish = "frontend"
+
+# Proxy API routes to your backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://skidrc-store.onrender.com/api/:splat"
+  status = 200
+
+# Optional: health check proxy (not required)
+[[redirects]]
+  from = "/healthz"
+  to = "https://skidrc-store.onrender.com/healthz"
+  status = 200
+
+[build]
+  publish = "frontend"
+  command = "mkdir -p frontend/images && cp -R images/* frontend/images/ || true"
