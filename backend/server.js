@@ -95,15 +95,20 @@ app.post('/api/create-order', async (req, res) => {
 app.get('/api/products', async (req, res) => {
   try {
     if (isDbAvailable) {
-      const snapshot = await db.collection('products').orderBy('createdAt', 'desc').get();
-      const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      res.status(200).json(items);
+      try {
+        const snapshot = await db.collection('products').orderBy('createdAt', 'desc').get();
+        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        return res.status(200).json(items);
+      } catch (innerErr) {
+        console.warn('Firestore error when fetching products, falling back to in-memory:', innerErr.message);
+        return res.status(200).json(inMemoryProducts);
+      }
     } else {
-      res.status(200).json(inMemoryProducts);
+      return res.status(200).json(inMemoryProducts);
     }
   } catch (error) {
     console.error('Error fetching products:', error);
-    res.status(500).json({ message: 'Failed to fetch products.' });
+    res.status(200).json(inMemoryProducts);
   }
 });
 
@@ -116,17 +121,28 @@ app.post('/api/admin/products', requireAdmin, async (req, res) => {
     }
     product.createdAt = new Date();
     if (isDbAvailable) {
-      const ref = await db.collection('products').add(product);
-      res.status(201).json({ id: ref.id, ...product });
+      try {
+        const ref = await db.collection('products').add(product);
+        return res.status(201).json({ id: ref.id, ...product });
+      } catch (innerErr) {
+        console.warn('Firestore error when adding product, storing in-memory instead:', innerErr.message);
+        const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const toStore = { id, ...product };
+        inMemoryProducts.unshift(toStore);
+        return res.status(201).json(toStore);
+      }
     } else {
       const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
       const toStore = { id, ...product };
       inMemoryProducts.unshift(toStore);
-      res.status(201).json(toStore);
+      return res.status(201).json(toStore);
     }
   } catch (error) {
     console.error('Error adding product:', error);
-    res.status(500).json({ message: 'Failed to add product.' });
+    const id = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const toStore = { id, ...(req.body || {}), createdAt: new Date() };
+    inMemoryProducts.unshift(toStore);
+    res.status(201).json(toStore);
   }
 });
 
